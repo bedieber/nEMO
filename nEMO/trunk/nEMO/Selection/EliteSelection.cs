@@ -16,11 +16,18 @@ using nEMO.Algorithm;
 
 namespace nEMO.Selection
 {
+    /// <summary>
+    /// A basic elitist selection. The elite selection keeps a dedicated list of non-dominated solutions that are found during the evolutionary optimization. This prevents that good solutions are overwritten during the process
+    /// </summary>
     public class EliteSelection : SelectionBase
     {
         private readonly SortedList<double, IChromosome> _elite;
         private readonly int _eliteSize;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EliteSelection"/> class.
+        /// </summary>
+        /// <param name="eliteSize">Size of the elite.</param>
         public EliteSelection(int eliteSize)
         {
             _eliteSize = eliteSize;
@@ -35,12 +42,25 @@ namespace nEMO.Selection
             get { return new List<IChromosome>(InternalElite.Values.OrderByDescending(c => c.DecisionVector[0])); }
         }
 
+        /// <summary>
+        /// Gets the internal elite.
+        /// </summary>
         protected SortedList<double, IChromosome> InternalElite
         {
             get { return _elite; }
         }
 
 
+        /// <summary>
+        /// Select individuals from oldPopulation (within startindex+length) and add to newPopulation
+        /// Lock <paramref name="newPopulation"/> since this is meant to be executed by multiple threads
+        /// Use <paramref name="are"/> to indicate that work is finished
+        /// </summary>
+        /// <param name="oldPopulation">The old population</param>
+        /// <param name="newPopulation">The new population filled in thís method (the result of the selection)</param>
+        /// <param name="startIndex">The startindex where to start selection</param>
+        /// <param name="length">The number of elements to perform selection on starting at <paramref name="startIndex"/></param>
+        /// <param name="are">The AutoResetEvent to set after finishing</param>
         public override void Select(List<IChromosome> oldPopulation, List<IChromosome> newPopulation, int startIndex, int length, AutoResetEvent are)
         {
             List<IChromosome> tmpList = new List<IChromosome>(startIndex + length);
@@ -97,6 +117,9 @@ namespace nEMO.Selection
             are.Set();
         }
 
+        /// <summary>
+        /// Removes dominated chromosomes from the elite.
+        /// </summary>
         protected virtual void RemoveDominated()
         {
             IList<IChromosome> eliteChromosomes = InternalElite.Values;

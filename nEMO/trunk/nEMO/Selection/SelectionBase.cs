@@ -15,21 +15,32 @@ using nEMO.Algorithm;
 
 namespace nEMO.Selection
 {
+    /// <summary>
+    /// Base class for all Selection
+    /// </summary>
     public abstract class SelectionBase
     {
         /// <summary>
         /// Select individuals from oldPopulation (within startindex+length) and add to newPopulation
         /// Lock <paramref name="newPopulation"/> since this is meant to be executed by multiple threads
-        /// Use <paramref name="are"/> to indicate that work is finished
+        /// Use <paramref name="are"/> to indicate that work is finished using <c>are.Set()</c>
         /// </summary>
-        /// <param name="oldPopulation"></param>
-        /// <param name="newPopulation"></param>
-        /// <param name="startIndex"></param>
-        /// <param name="length"></param>
-        /// <param name="are"></param>
+        /// <param name="oldPopulation">The old population</param>
+        /// <param name="newPopulation">The new population filled in thís method (the result of the selection)</param>
+        /// <param name="startIndex">The startindex where to start selection</param>
+        /// <param name="length">The number of elements to perform selection on starting at <paramref name="startIndex"/></param>
+        /// <param name="are">The AutoResetEvent to set after finishing</param>
         public abstract void Select(List<IChromosome> oldPopulation, List<IChromosome> newPopulation, int startIndex, int length, AutoResetEvent are);
 
         #region Helper Functions
+        /// <summary>
+        /// Determines whether the specified chromosome is dominated.
+        /// </summary>
+        /// <param name="chromosome">The chromosome.</param>
+        /// <param name="population">The population.</param>
+        /// <returns>
+        ///   <c>true</c> if the specified chromosome is dominated; otherwise, <c>false</c>.
+        /// </returns>
         internal bool IsDominated(IChromosome chromosome, IList<IChromosome> population)
         {
             foreach (IChromosome other in population)
@@ -44,6 +55,14 @@ namespace nEMO.Selection
             return false;
         }
 
+        /// <summary>
+        /// Determines whether the specified subject is dominated.
+        /// </summary>
+        /// <param name="subject">The subject.</param>
+        /// <param name="other">The other.</param>
+        /// <returns>
+        ///   <c>true</c> if the specified subject is dominated; otherwise, <c>false</c>.
+        /// </returns>
         public bool IsDominated(IChromosome subject, IChromosome other)
         {
             double[] subjectDV = subject.DecisionVector;

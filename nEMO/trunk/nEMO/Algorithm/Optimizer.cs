@@ -15,6 +15,10 @@ using System.Threading;
 
 namespace nEMO.Algorithm
 {
+    /// <summary>
+    /// The basic class for single and multi-criterion optimization.<br />
+    /// The <see cref="Optimizer"/> lets you configure and run a multicriterion optimization with exchangeable fitness function and selection.
+    /// </summary>
     public class Optimizer
     {
         private readonly int _populationSize;
@@ -24,24 +28,45 @@ namespace nEMO.Algorithm
         private Random _rand = new Random((int)DateTime.Now.Ticks);
         private Selection.SelectionBase _selection;
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the <see cref="Optimizer"/> should try to parallelize  selection and mutation.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if parallelization is enabled; otherwise, <c>false</c>.
+        /// </value>
         public bool Parallelize
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Gets or sets the crossover rate.
+        /// </summary>
+        /// <value>
+        /// The crossover rate.
+        /// </value>
         public float CrossoverRate
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Gets or sets the mutation rate.
+        /// </summary>
+        /// <value>
+        /// The mutation rate.
+        /// </value>
         public float MutationRate
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// Gets the best chromosome (the first chromosome in the population)
+        /// </summary>
         public IChromosome BestChromosome
         {
             get
@@ -52,27 +77,52 @@ namespace nEMO.Algorithm
             }
         }
 
+        /// <summary>
+        /// Gets the population.
+        /// </summary>
         public List<IChromosome> Population
         {
             get { return _population; }
         }
 
 
+        /// <summary>
+        /// Gets the fitness function.
+        /// </summary>
         public IFitnessFunction FitnessFunction { get; private set; }
 
+        /// <summary>
+        /// Gets or sets the selection.
+        /// </summary>
+        /// <value>
+        /// The selection.
+        /// </value>
         public Selection.SelectionBase Selection
         {
             get { return _selection; }
             set { _selection = value; }
         }
 
-        //MC Optimierung selbst bauen
-        //Berechnung für Kosten und Coverage separat halten (Bereits im VideoSensor implementiert)
-        //Genetische Funktionalität schreiben (Mutate, Crossover, Select)
-        //Finde Vektor wo Coverage->max und Cost->min bzw 1/cost->max
-        //Definition von Dominierung beachten (eines darf schlechter sein, wenn das andere dafür besser ist)
-        //Verwenden von Sesorcoveragechromosome
-        //Versch. Selektionsarten vorsehen (elite und nicht-elite)
+        /// <summary>
+        /// Gets the target size of the population.<br />
+        /// The actual size of the population may be retrieved via the <see cref="Population"/> property.
+        /// </summary>
+        /// <value>
+        /// The target size of the population.
+        /// </value>
+        public int PopulationSize
+        {
+            get { return _populationSize; }
+        }
+
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Optimizer"/> class.
+        /// </summary>
+        /// <param name="ancestor">The ancestor chromosome.</param>
+        /// <param name="populationSize">Size of the population.</param>
+        /// <param name="ff">The fitness function to use for chromosome fitness calculation.</param>
+        /// <param name="selection">The selection to be used to select the best chromosomes.</param>
         public Optimizer(IChromosome ancestor, int populationSize, IFitnessFunction ff, Selection.SelectionBase selection)
         {
             if (ancestor == null) throw new ArgumentNullException("ancestor");
@@ -96,17 +146,28 @@ namespace nEMO.Algorithm
             CrossoverRate = 0f;
         }
 
+        /// <summary>
+        /// Resets the random. May be used to reinitialize the <see cref="Optimizer"/>
+        /// </summary>
         public void ReInitRandom()
         {
             _rand = new Random();
         }
 
         #region Genetic Algorithm
+        /// <summary>
+        /// Runs single epoch (mutate, crossover, select).
+        /// </summary>
         public void RunEpoc()
         {
             RunEpoc(true);
         }
 
+        /// <summary>
+        /// Runs Runs single epoch (mutate, crossover, select).<br />
+        /// Depending on <paramref name="enforcePopulationSize"/>, the selection phase will reduce the population to the given size
+        /// </summary>
+        /// <param name="enforcePopulationSize">if set to <c>true</c>the population will be inflated or reduced to the predefined <see cref="PopulationSize"/>.</param>
         public void RunEpoc(bool enforcePopulationSize)
         {
             int change = 0;
@@ -117,16 +178,20 @@ namespace nEMO.Algorithm
                 Crossover();
                 change += Population.Count - oldPopulationSize;
                 change--;
-            } while (_population.Count < _populationSize && change > 0);
+            } while (_population.Count < PopulationSize && change > 0);
             Select(enforcePopulationSize);
         }
 
+        /// <summary>
+        /// Performs selection
+        /// </summary>
+        /// <param name="enforcePopulationSize">if set to <c>true</c>the population will be inflated or reduced to the predefined <see cref="PopulationSize"/>.</param>
         private void Select(bool enforcePopulationSize)
         {
-            List<IChromosome> newPopulation = new List<IChromosome>(_populationSize);
+            List<IChromosome> newPopulation = new List<IChromosome>(PopulationSize);
 
 
-            /**
+            /*
              ** Parallelize selection
              */
             int numThreads = Environment.ProcessorCount;
@@ -171,7 +236,7 @@ namespace nEMO.Algorithm
                 //{
                 //    newPopulation.RemoveAt(0);
                 //}
-                for (int i = 0; i < _population.Count && (newPopulation.Count < _populationSize); i++)
+                for (int i = 0; i < _population.Count && (newPopulation.Count < PopulationSize); i++)
                 {
                     int index = _rand.Next(0, _population.Count);
                     //TODO possible endless loop
@@ -190,11 +255,14 @@ namespace nEMO.Algorithm
             //});
         }
 
+        /// <summary>
+        /// Performs the crossover operation
+        /// </summary>
         private void Crossover()
         {
             if (CrossoverRate == 0)
                 return;
-            if (_populationSize <= 2) return;
+            if (PopulationSize <= 2) return;
 
             int numThreads = Environment.ProcessorCount;
             if (Parallelize && numThreads <= _population.Count * CrossoverRate)
@@ -216,6 +284,9 @@ namespace nEMO.Algorithm
                 DoCrossover((int)(_population.Count * CrossoverRate), null);
         }
 
+        /// <summary>
+        /// Performs mutation
+        /// </summary>
         private void Mutate()
         {
             int numThreads = Environment.ProcessorCount;
@@ -247,7 +318,7 @@ namespace nEMO.Algorithm
                 mutations = 1;
             for (int i = 0; i < mutations; i++)
             {
-                int index = _rand.Next(0, Math.Min(_populationSize, _population.Count));
+                int index = _rand.Next(0, Math.Min(PopulationSize, _population.Count));
                 IChromosome chromosome = _population[index].Clone();
                 chromosome.Mutate();
                 chromosome.Evaluate(FitnessFunction);
