@@ -3,6 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "nEMO", "nEMO\nEMO.csproj", "{DC8A42FF-4671-4B56-8BC7-E63B415B8685}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "doc", "doc", "{790F769B-0D8D-47B8-B5D6-E94FD3146AF9}"
+	ProjectSection(SolutionItems) = preProject
+		doc\Documentation.chm = doc\Documentation.chm
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SubversionScc) = preSolution
 		Svn-Managed = True

@@ -15,10 +15,23 @@ using nEMO.Algorithm;
 
 namespace nEMO.Selection
 {
+    /// <summary>
+    /// A basic selection for multi-criterion optimization problems, i.e. optimization problems with more than one dimensions. Those are the so called pareto optimization problems since typically not one single but multiple soltions must be considered optimal.
+    /// </summary>
     public class BasicMultiCriterionSelection : SelectionBase
     {
 
 
+        /// <summary>
+        /// Select individuals from oldPopulation (within startindex+length) and add to newPopulation
+        /// Lock <paramref name="newPopulation"/> since this is meant to be executed by multiple threads
+        /// Use <paramref name="are"/> to indicate that work is finished
+        /// </summary>
+        /// <param name="oldPopulation">The old population</param>
+        /// <param name="newPopulation">The new population filled in thís method (the result of the selection)</param>
+        /// <param name="startIndex">The startindex where to start selection</param>
+        /// <param name="length">The number of elements to perform selection on starting at <paramref name="startIndex"/></param>
+        /// <param name="are">The AutoResetEvent to set after finishing</param>
         public override void Select(List<IChromosome> oldPopulation, List<IChromosome> newPopulation, int startIndex, int length, System.Threading.AutoResetEvent are)
         {
             List<IChromosome> tmpList = new List<IChromosome>();

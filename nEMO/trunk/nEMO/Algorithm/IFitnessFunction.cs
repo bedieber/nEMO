@@ -11,8 +11,16 @@
 //=============================================================================
 namespace nEMO.Algorithm
 {
+    /// <summary>
+    /// Base interface for all Fitness function
+    /// </summary>
     public interface IFitnessFunction
     {
+        /// <summary>
+        /// Evaluates the specified chromosome.
+        /// </summary>
+        /// <param name="chromosome">The chromosome.</param>
+        /// <returns>The decision vector as an array of double values.</returns>
         double[] Evaluate(IChromosome chromosome);
     }
 }
